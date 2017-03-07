@@ -90,34 +90,35 @@ show_next_button(); // Initialize on first page
   Import Datasets & Initialize Map
 ===================== */
 
-// load the data
+// Data Link
 
 var route_data_link = "https://raw.githubusercontent.com/stevendshen/Datasets---Diwen-Shen/master/SEPTARoutesSpring2016.geojson";
 //var stop_data_link = "https://raw.githubusercontent.com/stevendshen/Datasets---Diwen-Shen/master/SEPTAStopsByLineSpring2016.geojson";
+
+
+// Global Variables
+
 var parsedData;
-var featureGroup;
+var featureGroup_1;
+var featureGroup_2;
+var featureGroup_3;
+var featureGroup_4;
+var featureGroup_5;
+
+
+// Read data into parsedData, load initial map
 
 $(document).ready(function() {
   $.ajax(route_data_link).done(function(data) {
-    var parsedData = JSON.parse(data); // Cleaned Data Saved Here
+    parsedData = JSON.parse(data); // Cleaned Data Saved Here
 
-    featureGroup = L.geoJson(parsedData, {
+    featureGroup_1 = L.geoJson(parsedData, {
       style: style_default,
       filter: myFilter
-    }).addTo(map);
-
-    featureGroup.eachLayer(popup_line_info_when_clicked);
-    featureGroup.eachLayer(highlight_when_mouseover);
-    featureGroup.eachLayer(highlight_when_mouseout);
+    }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_default);
 
   });
 });
-
-
-
-
-
-
 
 
 // Attributes
@@ -162,7 +163,6 @@ var popup_line_info_when_clicked = function(layer) {
   layer.on('click', function (event) {
     layer.bindPopup("Line: "+layer.feature.properties.LINEABBR); // pop-up
     console.log("Click Successfully Registered");
-    showResults();
   });
 };
 
@@ -174,38 +174,60 @@ var style_default = function(feature) {
 
 // Set styles: Color by Mode (using case function)
 var style_by_mode = function(feature) {
-  console.log(feature);
-  switch(feature.properties.LINEABBR){
-    case "34": return {color: 'green', opacity: 1.0, weight: 3};
-    case "LUCYGR": return {color: 'blue', opacity: 1.0, weight: 3};
-    case "21": return {color: 'red', opacity: 1.0, weight: 3};
+  //console.log("Line: " + feature.properties.LINEABBR + mode_data[feature.properties.LINEABBR]);
+  switch(mode_data[feature.properties.LINEABBR]){
+    case "Bus": return {color: 'blue', opacity: 1.0, weight: 3};
+    case "Trolley": return {color: 'green', opacity: 1.0, weight: 5};
   }
-  return {color: 'green', opacity: 1.0, weight: 3};
+};
+
+// Set styles: Color by Frequency (using case function)
+var style_by_frequency = function(feature) {
+  //console.log("Line: " + feature.properties.LINEABBR);
+  if(frequency_data[feature.properties.LINEABBR] > 30){
+    return {color: 'green', opacity: 1.0, weight: 3};
+  } else if(frequency_data[feature.properties.LINEABBR] > 15){
+    return {color: 'blue', opacity: 1.0, weight: 3};
+  } else if(frequency_data[feature.properties.LINEABBR] <= 15){
+    return {color: 'red', opacity: 1.0, weight: 5};
+  }
 };
 
 
 // Set Mouseover Effect
 var highlight_when_mouseover = function(layer) {
   layer.on('mouseover', function (event) {
-
-    console.log("Mouseover Registered");
+    //console.log("Mouseover Registered - Mouseover");
     layer.setStyle({
         weight: 5
     });
-    layer.bindPopup("Line: "+layer.feature.properties.LINEABBR); // pop-up
-    showResults();
+    // layer.bindPopup("Line: "+layer.feature.properties.LINEABBR); // pop-up, somehow this is not working
   });
 };
 
-// Set Mouseout Effect
-var highlight_when_mouseout = function(layer) {
+// Set Mouseout Effect to default
+var highlight_when_mouseout_default = function(layer) {
   layer.on('mouseout', function (event) {
-    console.log("Mouseout Registered");
-    layer.setStyle(style_default());
-    showResults();
+    //console.log("Mouseout Registered - Default");
+    layer.setStyle(style_default);
   });
 };
 
+// Set Mouseout Effect to by mode
+var highlight_when_mouseout_by_mode = function(layer) {
+  layer.on('mouseout', function (event) {
+    //console.log("Mouseout Registered - by Mode");
+    layer.setStyle(style_by_mode);
+  });
+};
+
+// Set Mouseout Effect to by frequency
+var highlight_when_mouseout_by_frequency = function(layer) {
+  layer.on('mouseout', function (event) {
+    //console.log("Mouseout Registered - by Frequency");
+    layer.setStyle(style_by_frequency);
+  });
+};
 
 // Map Zoom Levels:
 // Whole City
@@ -223,6 +245,9 @@ var map_zoom_UC = function() {
 var frequency_data = {"21": 10, "30": 45, "40": 16, "42": 10, "LUCYGR": 30, "LUCYGO": 30, "34": 10,
   "36": 10, "13": 10, "10": 10, "11": 10, "31": 25, "64": 20, "38": 20, "43": 20, "52": 8, "9": 18, "44": 20, "12": 20};
 
+var mode_data = {"21": "Bus", "30": "Bus", "40": "Bus", "42": "Bus", "LUCYGR": "Bus", "LUCYGO": "Bus", "34": "Trolley",
+  "36": "Trolley", "13": "Trolley", "10": "Trolley", "11": "Trolley", "31": "Bus", "64": "Bus", "38": "Bus", "43": "Bus",
+  "52": "Bus", "9": "Bus", "44": "Bus", "12": "Bus"};
 
 // Run Function Only When Data Fully Loaded: $(document).ready(functionToCallWhenReady)
 
@@ -285,21 +310,26 @@ var update_page_content = function(){
 
   // Page 1:
   if (state.slideNumber==1){
-    map_zoom_whole_city();
-    current_style = style_default();
-    show_next_button();
+    map_zoom_whole_city(); // set zoom
+    show_next_button(); // set buttons
+    if(featureGroup_2 !== undefined){featureGroup_2.clearLayers();} // clear unwanted layers, only if they are defined
+
+    featureGroup_1 = L.geoJson(parsedData, { // load featureGroup_1
+      style: style_default,
+      filter: myFilter
+    }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_default);
   }
 
   // Page 2:
   else if (state.slideNumber==2){
     map_zoom_UC();
+    if(featureGroup_1 !== undefined){featureGroup_1.clearLayers();}
+    if(featureGroup_3 !== undefined){featureGroup_3.clearLayers();}
 
-    featureGroup.clearLayers();
-    
     featureGroup_2 = L.geoJson(parsedData, {
       style: style_by_mode,
       filter: myFilter
-    }).addTo(map);
+    }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_mode);
 
     show_both_buttons();
   }
@@ -308,18 +338,43 @@ var update_page_content = function(){
   else if (state.slideNumber==3){
     map_zoom_UC();
     show_both_buttons();
+    if(featureGroup_2 !== undefined){featureGroup_2.clearLayers();}
+    if(featureGroup_4 !== undefined){featureGroup_4.clearLayers();}
+
+    featureGroup_3 = L.geoJson(parsedData, {
+      style: style_by_frequency,
+      filter: myFilter
+    }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
+
   }
 
   // Page 4:
   else if (state.slideNumber==4){
     map_zoom_UC();
     show_both_buttons();
+    if(featureGroup_3 !== undefined){featureGroup_3.clearLayers();}
+    if(featureGroup_5 !== undefined){featureGroup_5.clearLayers();}
+
+    featureGroup_4 = L.geoJson(parsedData, {
+      style: style_by_frequency,
+      filter: myFilter
+    }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
+
   }
 
   // Page 5:
   else if (state.slideNumber==5){
     map_zoom_UC();
     show_previous_button();
+    if(featureGroup_4 !== undefined){featureGroup_4.clearLayers();}
+
+    featureGroup_5 = L.geoJson(parsedData, {
+      style: style_by_frequency,
+      filter: myFilter
+    }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover);
+
+    featureGroup_5.eachLayer(highlight_when_mouseout_by_frequency);
+
   }
 };
 
