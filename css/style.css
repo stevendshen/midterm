@@ -43,3 +43,19 @@ span#frequent-network-logo {
   padding: 3px;
   border-radius: 3px;
 }
+
+span#secondary-logo {
+  background-color: blue;
+  font-size: 10px;
+  color: white;
+  padding: 3px;
+  border-radius: 3px;
+}
+
+span#infrequent-logo {
+  background-color: green;
+  font-size: 10px;
+  color: white;
+  padding: 3px;
+  border-radius: 3px;
+}

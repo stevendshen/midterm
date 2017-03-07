@@ -16,7 +16,6 @@ var Stamen_TonerLite = L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/ton
 }).addTo(map);
 
 
-
 /* =====================
   State of the Application - Page numbers and buttons
 ===================== */
@@ -51,6 +50,7 @@ var clickNextButton = function() {
     console.log("Current Page: " + state.slideNumber);
   } else {
     console.log("You have reached the last page.");
+    $("#page-message").text("Current Page: 5 - This is the last page");
   }
 };
 
@@ -60,6 +60,7 @@ var clickPreviousButton = function() {
     console.log("Current Page: " + state.slideNumber);
   } else {
     console.log("You have reached the first page.");
+    $("#page-message").text("Current Page: 1");
   }
 };
 
@@ -67,7 +68,12 @@ var saySlideName = function(slide) {
   // saySlideName uses console.log to "say" the name of the slide it is given. It should run when
   // someone clicks on one of the buttons.
   console.log("Current Page: " + state.slideData);
+  $("#page-message").text("Current Page: " + state.slideData);
 };
+
+
+// Page number message Initialize
+$("#page-message").text("Current Page: 1");
 
 
 // Control button display
@@ -85,6 +91,14 @@ var show_next_button = function(){
 show_next_button(); // Initialize on first page
 
 
+// Control checkbox display
+var show_checkbox_block = function(){
+    $('div#checkbox-block').show();
+};
+var hide_checkbox_block = function(){
+    $('div#checkbox-block').hide();
+};
+hide_checkbox_block(); // Initialize on first page
 
 /* =====================
   Import Datasets & Initialize Map
@@ -109,6 +123,11 @@ var featureGroup_4A;
 var featureGroup_4B;
 var featureGroup_4C;
 var checkbox_values = [false, false, false];
+
+// Checkbox Selectors
+var selectors = ["#cbox-input1", "#cbox-input2", "#cbox-input3"]; // Get Input Values
+var labels = ["#checkbox-label1", "#checkbox-label2", "#checkbox-label3"];
+
 
 // Read data into parsedData, load initial map
 
@@ -312,7 +331,6 @@ var mode_data = {"21": "Bus", "30": "Bus", "40": "Bus", "42": "Bus", "LUCYGR": "
   "52": "Bus", "9": "Bus", "44": "Bus", "12": "Bus"};
 
 
-
 // User Inputs: Run Function Only When Data Fully Loaded: $(document).ready(functionToCallWhenReady)
 $(document).ready(function() {
 
@@ -323,9 +341,6 @@ $(document).ready(function() {
   $("#button-next").text("Next Page");
   $("#button-previous").text("Previous Page");
 
-
-  // Disable All Checkboxes as default
-  //_.each(selectors, function(some_array){$(some_array).prop('disabled', false);});
 
   // Make "Next Button" Trigger: Change State of the Application
   $('body > div.sidebar > button#button-next').click(function(){
@@ -341,16 +356,17 @@ $(document).ready(function() {
     update_page_content();
   });
 
-  // Default checkboxes are all unchecked
+  // Default checkboxes are all unchecked, and buttons are disabled
   $("#cbox-input1").prop("checked",false);
   $("#cbox-input2").prop("checked",false);
   $("#cbox-input3").prop("checked",false);
+  _.each(selectors, function(some_array){$(some_array).prop('disabled', true);}); // Disable All Checkboxes as default
+  $('button#button-checkbox').prop('disabled', true); // disable button
 
   // Make "Checkbox Button" Trigger: Change State of the Application
   $('button#button-checkbox').click(function(){
     console.log("Button triggered.");
-    var selectors = ["#cbox-input1", "#cbox-input2", "#cbox-input3"]; // Get Input Values
-    var labels = ["#checkbox-label1", "#checkbox-label2", "#checkbox-label3"];
+    _.each(selectors, function(some_array){$(some_array).prop('disabled', false);});
     checkbox_values = _.map(selectors, function(some_array){return $(some_array).is(":checked");}); // get boolean for check-box
     console.log(checkbox_values);
     update_page_content();
@@ -386,6 +402,7 @@ var update_page_content = function(){
     map_zoom_whole_city(); // set zoom
     show_next_button(); // set buttons
     clear_all_layers(); // clear unwanted layers, only if they are defined
+    hide_checkbox_block(); // hide checkbox block
 
     featureGroup_1 = L.geoJson(parsedData, { // load featureGroup_1
       style: style_default,
@@ -398,6 +415,7 @@ var update_page_content = function(){
     map_zoom_UC();
     show_both_buttons();
     clear_all_layers();
+    hide_checkbox_block();
 
     featureGroup_2A = L.geoJson(parsedData, {
       style: style_by_mode,
@@ -416,6 +434,7 @@ var update_page_content = function(){
     map_zoom_UC();
     show_both_buttons();
     clear_all_layers();
+    show_checkbox_block();
 
     featureGroup_3A = L.geoJson(parsedData, {
       style: style_by_frequency,
@@ -439,6 +458,7 @@ var update_page_content = function(){
     map_zoom_UC();
     show_both_buttons();
     clear_all_layers();
+    show_checkbox_block();
 
     featureGroup_4A = L.geoJson(parsedData, {
       style: style_by_frequency,
@@ -462,6 +482,11 @@ var update_page_content = function(){
     map_zoom_UC();
     show_previous_button();
     clear_all_layers();
+    show_checkbox_block();
+
+    // Enable checkboxes and buttons
+    _.each(selectors, function(some_array){$(some_array).prop('disabled', false);}); // enable checkboxes
+    $('button#button-checkbox').prop('disabled', false); // enable button
 
     var checkbox_60 = function() {
       featureGroup_3A = L.geoJson(parsedData, {
