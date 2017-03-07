@@ -104,7 +104,7 @@ var featureGroup_2;
 var featureGroup_3;
 var featureGroup_4;
 var featureGroup_5;
-
+var input_values;
 
 // Read data into parsedData, load initial map
 
@@ -114,7 +114,7 @@ $(document).ready(function() {
 
     featureGroup_1 = L.geoJson(parsedData, {
       style: style_default,
-      filter: myFilter
+      filter: filter_default
     }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_default);
 
   });
@@ -138,7 +138,7 @@ $(document).ready(function() {
 
 
 // Filter data to keep the file size down
-var myFilter = function(feature) {
+var filter_default = function(feature) {
   if (feature.properties.LINEABBR === "21" | feature.properties.LINEABBR === "30" |
   feature.properties.LINEABBR === "40" | feature.properties.LINEABBR === "LUCYGR" |
   feature.properties.LINEABBR === "42" | feature.properties.LINEABBR === "LUCYGO" |
@@ -158,10 +158,62 @@ var myFilter = function(feature) {
 ===================== */
 
 
+// Filter by mode
+var filter_Trolley = function(feature) {
+  if (mode_data[feature.properties.LINEABBR] == "Trolley"){return true;
+  } else {return false;
+  }
+};
+
+var filter_Bus = function(feature) {
+  if (mode_data[feature.properties.LINEABBR] == "Bus"){return true;
+  } else {return false;
+  }
+};
+
+// Filter by frequency
+var filter_15 = function(feature) {
+  if (frequency_data[feature.properties.LINEABBR] <= 15){return true;
+  } else {return false;
+  }
+};
+
+var filter_30 = function(feature) {
+  if (frequency_data[feature.properties.LINEABBR] > 15 & frequency_data[feature.properties.LINEABBR] <= 30){return true;
+  } else {return false;
+  }
+};
+
+var filter_60 = function(feature) {
+  if (frequency_data[feature.properties.LINEABBR] > 30){return true;
+  } else {return false;
+  }
+};
+
+// Filter by line
+var filter_l21 = function(feature) {
+  if (feature.properties.LINEABBR == "21"){return true;
+  } else {return false;
+  }
+};
+
+var filter_l30 = function(feature) {
+  if (feature.properties.LINEABBR == "30"){return true;
+  } else {return false;
+  }
+};
+
+
+var filter_l13 = function(feature) {
+  if (feature.properties.LINEABBR == "13"){return true;
+  } else {return false;
+  }
+};
+
 // When clicking a line, display line number
 var popup_line_info_when_clicked = function(layer) {
   layer.on('click', function (event) {
-    layer.bindPopup("Line: "+layer.feature.properties.LINEABBR); // pop-up
+    layer.bindPopup("<dt>Line: "+layer.feature.properties.LINEABBR + "</dt><dt>Frequency: " + frequency_data[layer.feature.properties.LINEABBR] + " min</dt><dt>" + layer.feature.properties.tpField05 + " - " + layer.feature.properties.tpField06 + "</dt>"); // pop-up
     console.log("Click Successfully Registered");
   });
 };
@@ -186,7 +238,7 @@ var style_by_frequency = function(feature) {
   //console.log("Line: " + feature.properties.LINEABBR);
   if(frequency_data[feature.properties.LINEABBR] > 30){
     return {color: 'green', opacity: 1.0, weight: 3};
-  } else if(frequency_data[feature.properties.LINEABBR] > 15){
+  } else if(frequency_data[feature.properties.LINEABBR] > 15) {
     return {color: 'blue', opacity: 1.0, weight: 3};
   } else if(frequency_data[feature.properties.LINEABBR] <= 15){
     return {color: 'red', opacity: 1.0, weight: 5};
@@ -199,17 +251,21 @@ var highlight_when_mouseover = function(layer) {
   layer.on('mouseover', function (event) {
     //console.log("Mouseover Registered - Mouseover");
     layer.setStyle({
-        weight: 5
+        weight: 5,
+        color: "yellow"
     });
-    // layer.bindPopup("Line: "+layer.feature.properties.LINEABBR); // pop-up, somehow this is not working
+    layer.bringToFront();
+    layer.bindPopup("Line: "+layer.feature.properties.LINEABBR).openPopup(); // pop-up
   });
 };
+
 
 // Set Mouseout Effect to default
 var highlight_when_mouseout_default = function(layer) {
   layer.on('mouseout', function (event) {
     //console.log("Mouseout Registered - Default");
-    layer.setStyle(style_default);
+    layer.setStyle(style_default(layer.feature));
+    layer.invoke('closePopup'); // It is known bug that .closePopup() does not work. Use this instead.
   });
 };
 
@@ -217,7 +273,8 @@ var highlight_when_mouseout_default = function(layer) {
 var highlight_when_mouseout_by_mode = function(layer) {
   layer.on('mouseout', function (event) {
     //console.log("Mouseout Registered - by Mode");
-    layer.setStyle(style_by_mode);
+    layer.setStyle(style_by_mode(layer.feature));
+    layer.invoke('closePopup');
   });
 };
 
@@ -225,7 +282,8 @@ var highlight_when_mouseout_by_mode = function(layer) {
 var highlight_when_mouseout_by_frequency = function(layer) {
   layer.on('mouseout', function (event) {
     //console.log("Mouseout Registered - by Frequency");
-    layer.setStyle(style_by_frequency);
+    layer.setStyle(style_by_frequency(layer.feature));
+    layer.invoke('closePopup');
   });
 };
 
@@ -250,35 +308,27 @@ var mode_data = {"21": "Bus", "30": "Bus", "40": "Bus", "42": "Bus", "LUCYGR": "
   "52": "Bus", "9": "Bus", "44": "Bus", "12": "Bus"};
 
 // Run Function Only When Data Fully Loaded: $(document).ready(functionToCallWhenReady)
-
 $(document).ready(function() {
 
   // Text Labels
   $("#main-heading").text("Exploring the Usefulness of SEPTA Bus Lines in University City");
 
-  // Checkbox Labels
-  $("#checkbox-label1").text("First Class");
-  $("#checkbox-label2").text("Transfer");
-
   // Button Labels
   $("#button-next").text("Next Page");
   $("#button-previous").text("Previous Page");
 
+  // Default checkboxes are checked
   $("#cbox-input1").prop("checked",true);
   $("#cbox-input2").prop("checked",true);
+  $("#cbox-input3").prop("checked",true);
 
   // Get Input Values
 
-  var selectors = ["#cbox-input1", "#cbox-input2"];
-  var labels = ["#checkbox-label1", "#checkbox-label2"];
-  var input_values = _.map(selectors, function(some_array){return $(some_array).val();});
+  var selectors = ["#cbox-input1", "#cbox-input2", "#cbox-input3"];
+  var labels = ["#checkbox-label1", "#checkbox-label2", "#checkbox-label3"];
+  input_values = _.map(selectors, function(some_array){return $(some_array).is(":checked");}); // get boolean for check-box
   console.log(input_values);
 
-  var selectors_and_input_values = {}; // Create Dictionary to Store Selector with Input Values
-  for(i=0; i<selectors.length; i++){
-    selectors_and_input_values[$(labels[i]).text()]=input_values[i];
-  }
-  console.log(selectors_and_input_values);
 
   // Disable All Checkboxes as default
   _.each(selectors, function(some_array){$(some_array).prop('disabled', true);});
@@ -316,7 +366,7 @@ var update_page_content = function(){
 
     featureGroup_1 = L.geoJson(parsedData, { // load featureGroup_1
       style: style_default,
-      filter: myFilter
+      filter: filter_default
     }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_default);
   }
 
@@ -328,7 +378,12 @@ var update_page_content = function(){
 
     featureGroup_2 = L.geoJson(parsedData, {
       style: style_by_mode,
-      filter: myFilter
+      filter: filter_Bus
+    }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_mode);
+
+    featureGroup_2 = L.geoJson(parsedData, {
+      style: style_by_mode,
+      filter: filter_Trolley
     }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_mode);
 
     show_both_buttons();
@@ -343,7 +398,17 @@ var update_page_content = function(){
 
     featureGroup_3 = L.geoJson(parsedData, {
       style: style_by_frequency,
-      filter: myFilter
+      filter: filter_60
+    }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
+
+    featureGroup_3 = L.geoJson(parsedData, {
+      style: style_by_frequency,
+      filter: filter_30
+    }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
+
+    featureGroup_3 = L.geoJson(parsedData, {
+      style: style_by_frequency,
+      filter: filter_15
     }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
 
   }
@@ -357,7 +422,17 @@ var update_page_content = function(){
 
     featureGroup_4 = L.geoJson(parsedData, {
       style: style_by_frequency,
-      filter: myFilter
+      filter: filter_60
+    }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
+
+    featureGroup_4 = L.geoJson(parsedData, {
+      style: style_by_frequency,
+      filter: filter_30
+    }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
+
+    featureGroup_4 = L.geoJson(parsedData, {
+      style: style_by_frequency,
+      filter: filter_15
     }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
 
   }
@@ -370,10 +445,8 @@ var update_page_content = function(){
 
     featureGroup_5 = L.geoJson(parsedData, {
       style: style_by_frequency,
-      filter: myFilter
-    }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover);
-
-    featureGroup_5.eachLayer(highlight_when_mouseout_by_frequency);
+      filter: filter_l13
+    }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
 
   }
 };
