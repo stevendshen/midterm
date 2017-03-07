@@ -50,8 +50,8 @@ var clickNextButton = function() {
     console.log("Current Page: " + state.slideNumber);
   } else {
     console.log("You have reached the last page.");
-    $("#page-message").text("Current Page: 5 - This is the last page");
   }
+  $("#page-message").text("Current Page: " + state.slideNumber);
 };
 
 var clickPreviousButton = function() {
@@ -60,20 +60,15 @@ var clickPreviousButton = function() {
     console.log("Current Page: " + state.slideNumber);
   } else {
     console.log("You have reached the first page.");
-    $("#page-message").text("Current Page: 1");
   }
+  $("#page-message").text("Current Page: " + state.slideNumber);
 };
 
 var saySlideName = function(slide) {
   // saySlideName uses console.log to "say" the name of the slide it is given. It should run when
   // someone clicks on one of the buttons.
   console.log("Current Page: " + state.slideData);
-  $("#page-message").text("Current Page: " + state.slideData);
 };
-
-
-// Page number message Initialize
-$("#page-message").text("Current Page: 1");
 
 
 // Control button display
@@ -99,6 +94,19 @@ var hide_checkbox_block = function(){
     $('div#checkbox-block').hide();
 };
 hide_checkbox_block(); // Initialize on first page
+
+
+// Text Controls
+// Page number message Initialize
+$("#page-message").text("Current Page: 1");
+
+// Initialize text
+$("#main-heading").text("Exploring the Usefulness of SEPTA Bus (Trolley) Lines in University City"); // main heading
+$("#title").text("Introduction"); // title of the slide
+$(".main-text-1").text("University City is served by over 19 SEPTA bus and surface trolley lines, as shown on this map. However, don't be fooled. Only a handful of bus lines arrive every 15 minutes or so, while others arrive every 30 minutes or longer, and will not be useful to time-sensitive travelers who want to travel immediately."); // main text 1
+$("#instructions").text("You can hover over a line and see what it is. For more detailed information, click on the line.");
+
+
 
 /* =====================
   Import Datasets & Initialize Map
@@ -334,8 +342,6 @@ var mode_data = {"21": "Bus", "30": "Bus", "40": "Bus", "42": "Bus", "LUCYGR": "
 // User Inputs: Run Function Only When Data Fully Loaded: $(document).ready(functionToCallWhenReady)
 $(document).ready(function() {
 
-  // Text Labels
-  $("#main-heading").text("Exploring the Usefulness of SEPTA Bus Lines in University City");
 
   // Button Labels
   $("#button-next").text("Next Page");
@@ -408,6 +414,10 @@ var update_page_content = function(){
       style: style_default,
       filter: filter_default
     }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_default);
+
+    $("#title").text("Introduction");
+    $(".main-text-1").text("University City is served by over 19 SEPTA bus and surface trolley lines, as shown on this map. However, don't be fooled. Only a handful of bus lines arrive every 15 minutes or so, while others arrive every 30 minutes or longer, and will not be useful to time-sensitive travelers who want to travel immediately."); // main text 1
+    $("#instructions").text("You can hover over a bus line and see what line it is. For more detailed information, click on the bus line.");
   }
 
   // Page 2:
@@ -427,6 +437,9 @@ var update_page_content = function(){
       filter: filter_Trolley
     }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_mode);
 
+    $("#title").text("Typical Transit Map");
+    $(".main-text-1").text("Here is a typical transit map, where different lines are colored by mode - bus is blue, and trolley is green. The problem is that these maps don't tell you which lines are frequent -- where you can show up anytime and expect a vehicle -- versus which lines are infrequent and cannot be used unless the trip is planned well-ahead."); // main text 1
+    $("#instructions").text("You can hover over a line and see what it is. For more detailed information, click on the line.");
   }
 
   // Page 3:
@@ -450,6 +463,10 @@ var update_page_content = function(){
       style: style_by_frequency,
       filter: filter_15
     }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
+
+    $("#title").text("The Frequency Map");
+    $(".main-text-1").text("To understand the actual usefulness of our bus system, I recoded the map to reflect typical mid-day frequencies. The frequent-network consists of lines that arrive every 15 min can serve as 'conveyor belts' that are available whenever you wish to travel. Other lines are less useful."); // main text 1
+    $("#instructions").text("You can hover over a line and see what it is. For more detailed information, click on the line.");
 
   }
 
@@ -475,6 +492,14 @@ var update_page_content = function(){
       filter: filter_lLUCYGR
     }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
 
+    var popup_1 = L.popup().setLatLng([39.962523, -75.213115]).setContent("Line 30 comes every 45 min. For most, wait time is longer than walk time from other frequent route.").addTo(map);
+    var popup_2 = L.popup().setLatLng([39.956305, -75.194147]).setContent("LUCY Green comes every 30 min, useful only when travel time coincides with schedule.").addTo(map);
+    var popup_3 = L.popup().setLatLng([39.949496, -75.164750]).setContent("Line 21 comes every 10 min, useful for any spontaneous, time-sensitive traveler (which is everyone), without needing to consult a schedule or worry about missing a bus.").addTo(map);
+
+    $("#title").text("The Frequency Map: Case Study");
+    $(".main-text-1").text("To understand the actual usefulness of our bus system, I recoded the map to reflect typical mid-day frequencies. The frequent-network consists of lines that arrive every 15 min can serve as 'conveyor belts' that are available whenever you wish to travel. Other lines are less useful."); // main text 1
+    $("#instructions").text("");
+
   }
 
   // Page 5:
@@ -483,6 +508,8 @@ var update_page_content = function(){
     show_previous_button();
     clear_all_layers();
     show_checkbox_block();
+
+    map.closePopup(); // close popup
 
     // Enable checkboxes and buttons
     _.each(selectors, function(some_array){$(some_array).prop('disabled', false);}); // enable checkboxes
@@ -512,6 +539,12 @@ var update_page_content = function(){
     if(checkbox_values[0]===true){checkbox_15();}
     if(checkbox_values[1]===true){checkbox_30();}
     if(checkbox_values[2]===true){checkbox_60();}
+
+    $("#title").text("The Frequency Map");
+    $(".main-text-1").text("This frequent transit map helps to reveal what level of transit mobility is possible for spontaneous, time-sensitive travelers. It is clear that the area covered by the frequent (useful) network is much smaller than the entire transit network, showing that simply measuring route coverage is not sufficient for evaluating the quality of a transit system, offering opportunity for improvement."); // main text 1
+    $("#instructions").text("Use the checkbox to explorer the different layers in the transit system.");
+    $("#page-message").text("Current Page: 5 - This is the last page.");
+
   }
 
 }; // end of huge ready function, don't delete
