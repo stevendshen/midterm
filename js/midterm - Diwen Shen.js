@@ -100,11 +100,15 @@ var route_data_link = "https://raw.githubusercontent.com/stevendshen/Datasets---
 
 var parsedData;
 var featureGroup_1;
-var featureGroup_2;
-var featureGroup_3;
-var featureGroup_4;
-var featureGroup_5;
-var input_values;
+var featureGroup_2A;
+var featureGroup_2B;
+var featureGroup_3A;
+var featureGroup_3B;
+var featureGroup_3C;
+var featureGroup_4A;
+var featureGroup_4B;
+var featureGroup_4C;
+var checkbox_values = [false, false, false];
 
 // Read data into parsedData, load initial map
 
@@ -204,8 +208,8 @@ var filter_l30 = function(feature) {
 };
 
 
-var filter_l13 = function(feature) {
-  if (feature.properties.LINEABBR == "13"){return true;
+var filter_lLUCYGR = function(feature) {
+  if (feature.properties.LINEABBR == "LUCYGR"){return true;
   } else {return false;
   }
 };
@@ -215,6 +219,7 @@ var popup_line_info_when_clicked = function(layer) {
   layer.on('click', function (event) {
     layer.bindPopup("<dt>Line: "+layer.feature.properties.LINEABBR + "</dt><dt>Frequency: " + frequency_data[layer.feature.properties.LINEABBR] + " min</dt><dt>" + layer.feature.properties.tpField05 + " - " + layer.feature.properties.tpField06 + "</dt>"); // pop-up
     console.log("Click Successfully Registered");
+    console.log(layer.feature.properties.LINEABBR);
   });
 };
 
@@ -298,7 +303,6 @@ var map_zoom_UC = function() {
 };
 
 
-
 // Create an array to store (mid-day around 12pm) frequency information, to be called
 var frequency_data = {"21": 10, "30": 45, "40": 16, "42": 10, "LUCYGR": 30, "LUCYGO": 30, "34": 10,
   "36": 10, "13": 10, "10": 10, "11": 10, "31": 25, "64": 20, "38": 20, "43": 20, "52": 8, "9": 18, "44": 20, "12": 20};
@@ -307,7 +311,9 @@ var mode_data = {"21": "Bus", "30": "Bus", "40": "Bus", "42": "Bus", "LUCYGR": "
   "36": "Trolley", "13": "Trolley", "10": "Trolley", "11": "Trolley", "31": "Bus", "64": "Bus", "38": "Bus", "43": "Bus",
   "52": "Bus", "9": "Bus", "44": "Bus", "12": "Bus"};
 
-// Run Function Only When Data Fully Loaded: $(document).ready(functionToCallWhenReady)
+
+
+// User Inputs: Run Function Only When Data Fully Loaded: $(document).ready(functionToCallWhenReady)
 $(document).ready(function() {
 
   // Text Labels
@@ -317,21 +323,9 @@ $(document).ready(function() {
   $("#button-next").text("Next Page");
   $("#button-previous").text("Previous Page");
 
-  // Default checkboxes are checked
-  $("#cbox-input1").prop("checked",true);
-  $("#cbox-input2").prop("checked",true);
-  $("#cbox-input3").prop("checked",true);
-
-  // Get Input Values
-
-  var selectors = ["#cbox-input1", "#cbox-input2", "#cbox-input3"];
-  var labels = ["#checkbox-label1", "#checkbox-label2", "#checkbox-label3"];
-  input_values = _.map(selectors, function(some_array){return $(some_array).is(":checked");}); // get boolean for check-box
-  console.log(input_values);
-
 
   // Disable All Checkboxes as default
-  _.each(selectors, function(some_array){$(some_array).prop('disabled', true);});
+  //_.each(selectors, function(some_array){$(some_array).prop('disabled', false);});
 
   // Make "Next Button" Trigger: Change State of the Application
   $('body > div.sidebar > button#button-next').click(function(){
@@ -347,7 +341,36 @@ $(document).ready(function() {
     update_page_content();
   });
 
+  // Default checkboxes are all unchecked
+  $("#cbox-input1").prop("checked",false);
+  $("#cbox-input2").prop("checked",false);
+  $("#cbox-input3").prop("checked",false);
+
+  // Make "Checkbox Button" Trigger: Change State of the Application
+  $('button#button-checkbox').click(function(){
+    console.log("Button triggered.");
+    var selectors = ["#cbox-input1", "#cbox-input2", "#cbox-input3"]; // Get Input Values
+    var labels = ["#checkbox-label1", "#checkbox-label2", "#checkbox-label3"];
+    checkbox_values = _.map(selectors, function(some_array){return $(some_array).is(":checked");}); // get boolean for check-box
+    console.log(checkbox_values);
+    update_page_content();
+  });
+
 }); // end of huge ready function, don't delete
+
+
+// Clear all layers
+var clear_all_layers = function(){
+  if(featureGroup_1 !== undefined){featureGroup_1.clearLayers();}
+  if(featureGroup_2A !== undefined){featureGroup_2A.clearLayers();}
+  if(featureGroup_2B !== undefined){featureGroup_2B.clearLayers();}
+  if(featureGroup_3A !== undefined){featureGroup_3A.clearLayers();}
+  if(featureGroup_3B !== undefined){featureGroup_3B.clearLayers();}
+  if(featureGroup_3C !== undefined){featureGroup_3C.clearLayers();}
+  if(featureGroup_4A !== undefined){featureGroup_4A.clearLayers();}
+  if(featureGroup_4B !== undefined){featureGroup_4B.clearLayers();}
+  if(featureGroup_4C !== undefined){featureGroup_4C.clearLayers();}
+};
 
 
 /* =====================
@@ -362,7 +385,7 @@ var update_page_content = function(){
   if (state.slideNumber==1){
     map_zoom_whole_city(); // set zoom
     show_next_button(); // set buttons
-    if(featureGroup_2 !== undefined){featureGroup_2.clearLayers();} // clear unwanted layers, only if they are defined
+    clear_all_layers(); // clear unwanted layers, only if they are defined
 
     featureGroup_1 = L.geoJson(parsedData, { // load featureGroup_1
       style: style_default,
@@ -373,40 +396,38 @@ var update_page_content = function(){
   // Page 2:
   else if (state.slideNumber==2){
     map_zoom_UC();
-    if(featureGroup_1 !== undefined){featureGroup_1.clearLayers();}
-    if(featureGroup_3 !== undefined){featureGroup_3.clearLayers();}
+    show_both_buttons();
+    clear_all_layers();
 
-    featureGroup_2 = L.geoJson(parsedData, {
+    featureGroup_2A = L.geoJson(parsedData, {
       style: style_by_mode,
       filter: filter_Bus
     }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_mode);
 
-    featureGroup_2 = L.geoJson(parsedData, {
+    featureGroup_2B = L.geoJson(parsedData, {
       style: style_by_mode,
       filter: filter_Trolley
     }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_mode);
 
-    show_both_buttons();
   }
 
   // Page 3:
   else if (state.slideNumber==3){
     map_zoom_UC();
     show_both_buttons();
-    if(featureGroup_2 !== undefined){featureGroup_2.clearLayers();}
-    if(featureGroup_4 !== undefined){featureGroup_4.clearLayers();}
+    clear_all_layers();
 
-    featureGroup_3 = L.geoJson(parsedData, {
+    featureGroup_3A = L.geoJson(parsedData, {
       style: style_by_frequency,
       filter: filter_60
     }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
 
-    featureGroup_3 = L.geoJson(parsedData, {
+    featureGroup_3B = L.geoJson(parsedData, {
       style: style_by_frequency,
       filter: filter_30
     }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
 
-    featureGroup_3 = L.geoJson(parsedData, {
+    featureGroup_3C = L.geoJson(parsedData, {
       style: style_by_frequency,
       filter: filter_15
     }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
@@ -417,22 +438,21 @@ var update_page_content = function(){
   else if (state.slideNumber==4){
     map_zoom_UC();
     show_both_buttons();
-    if(featureGroup_3 !== undefined){featureGroup_3.clearLayers();}
-    if(featureGroup_5 !== undefined){featureGroup_5.clearLayers();}
+    clear_all_layers();
 
-    featureGroup_4 = L.geoJson(parsedData, {
+    featureGroup_4A = L.geoJson(parsedData, {
       style: style_by_frequency,
-      filter: filter_60
+      filter: filter_l21
     }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
 
-    featureGroup_4 = L.geoJson(parsedData, {
+    featureGroup_4B = L.geoJson(parsedData, {
       style: style_by_frequency,
-      filter: filter_30
+      filter: filter_l30
     }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
 
-    featureGroup_4 = L.geoJson(parsedData, {
+    featureGroup_4C = L.geoJson(parsedData, {
       style: style_by_frequency,
-      filter: filter_15
+      filter: filter_lLUCYGR
     }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
 
   }
@@ -441,15 +461,35 @@ var update_page_content = function(){
   else if (state.slideNumber==5){
     map_zoom_UC();
     show_previous_button();
-    if(featureGroup_4 !== undefined){featureGroup_4.clearLayers();}
+    clear_all_layers();
 
-    featureGroup_5 = L.geoJson(parsedData, {
-      style: style_by_frequency,
-      filter: filter_l13
-    }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
+    var checkbox_60 = function() {
+      featureGroup_3A = L.geoJson(parsedData, {
+        style: style_by_frequency,
+        filter: filter_60
+      }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
+    };
 
+    var checkbox_30 = function() {
+      featureGroup_3B = L.geoJson(parsedData, {
+        style: style_by_frequency,
+        filter: filter_30
+      }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
+    };
+
+    var checkbox_15 = function() {
+      featureGroup_3C = L.geoJson(parsedData, {
+        style: style_by_frequency,
+        filter: filter_15
+      }).addTo(map).eachLayer(popup_line_info_when_clicked).eachLayer(highlight_when_mouseover).eachLayer(highlight_when_mouseout_by_frequency);
+    };
+
+    if(checkbox_values[0]===true){checkbox_15();}
+    if(checkbox_values[1]===true){checkbox_30();}
+    if(checkbox_values[2]===true){checkbox_60();}
   }
-};
+
+}; // end of huge ready function, don't delete
 
 
 

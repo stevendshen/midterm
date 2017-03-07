@@ -20,6 +20,7 @@ body {
     overflow-y: auto;
     padding: 10px;
     background-color: gray
+
 }
 
 div#checkbox-block {
@@ -28,6 +29,7 @@ div#checkbox-block {
   margin-right: 50px;
   margin-left: 20px;
   border-radius: 5px;
+  color: black;
 }
 
 p.main-text-2 {
